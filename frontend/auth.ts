@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import type { JWT } from "next-auth/jwt";
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -30,7 +31,8 @@ declare module "next-auth/jwt" {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const authConfig: any = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -86,7 +88,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jwt: async ({ token, user }: { token: JWT; user: any }) => {
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -94,7 +97,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-    async session({ session, token }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    session: async ({ session, token }: { session: any; token: JWT }) => {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = (token.role as "member" | "admin") || "member";
@@ -104,7 +108,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
   secret: process.env.NEXTAUTH_SECRET || "your-secret-key-change-in-production",
-});
+};
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
