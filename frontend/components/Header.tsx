@@ -35,13 +35,11 @@ export default function Header() {
         {/* Right: Navigation Links */}
         <div className="flex items-center gap-6">
           {user ? (
-            <>
+            <div className="flex flex-row space-x-10 items-center justify-center">
               {/* User Info */}
-              <div>
-                <p className="font-medium">{user && user?.name}</p>
-                <p className="text-blue-100 capitalize text-xs">
-                  {user && user?.role}
-                </p>
+              <div className="text-sm">
+                <p className="font-medium">{user.name}</p>
+                <p className="text-blue-100 capitalize text-xs">{user.role}</p>
               </div>
 
               {/* Role-based Links */}
@@ -78,7 +76,7 @@ export default function Header() {
               >
                 Logout
               </button>
-            </>
+            </div>
           ) : (
             <>
               {/* No Auth - Login Link Only */}
