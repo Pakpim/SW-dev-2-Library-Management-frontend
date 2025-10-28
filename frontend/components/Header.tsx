@@ -1,38 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-
-interface User {
-  id: string;
-  name: string;
-  role: "member" | "admin";
-}
-
-function getStoredUser(): User | null {
-  if (typeof window === "undefined") return null;
-
-  const storedUser = localStorage.getItem("user");
-  if (storedUser) {
-    try {
-      return JSON.parse(storedUser);
-    } catch {
-      localStorage.removeItem("user");
-      return null;
-    }
-  }
-  return null;
-}
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const [user, setUser] = useState<User | null>(getStoredUser);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    setUser(null);
-    window.location.href = "/login";
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push("/login");
   };
+
+  // Don't render until session is loaded
+  if (status === "loading") {
+    return (
+      <header className="bg-blue-600 text-white shadow-md">
+        <nav className="max-w-7xl mx-auto px-4 py-4" />
+      </header>
+    );
+  }
+
+  const user = session?.user as
+    | { name: string; role: "member" | "admin" }
+    | undefined;
 
   return (
     <header className="bg-blue-600 text-white shadow-md">
@@ -44,6 +36,12 @@ export default function Header() {
             className="text-2xl font-bold hover:text-blue-100 transition"
           >
             📚 LibManager
+          </Link>
+          <Link
+            href="/books"
+            className="hover:text-blue-100 transition font-medium"
+          >
+            Books
           </Link>
         </div>
 
