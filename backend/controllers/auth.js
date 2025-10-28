@@ -67,13 +67,19 @@ const sendTokenResponse = (user, statusCode, res) => {
   if (process.env.NODE_ENV === "production") {
     options.secure = true;
   }
-  res.status(statusCode).cookie("token", token, options).json({
-    success: true,
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    token,
-  });
+  res
+    .status(statusCode)
+    .cookie("token", token, options)
+    .json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role || "member",
+      },
+      token,
+    });
 };
 
 //@desc   Get current Logged in user
