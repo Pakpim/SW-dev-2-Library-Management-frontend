@@ -3,7 +3,7 @@
 
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -25,12 +25,24 @@ export function ProtectedRoute({
     }
 
     // Check if user has required role
-    if (requiredRole && user.role !== requiredRole && user.role !== "admin") {
+    // Admin can access both member and admin routes
+    if (
+      requiredRole === "member" &&
+      user.role !== "member" &&
+      user.role !== "admin"
+    ) {
       router.push("/books");
+      return;
+    }
+
+    // Only admin can access admin routes
+    if (requiredRole === "admin" && user.role !== "admin") {
+      router.push("/books");
+      return;
     }
   }, [isAuthenticated, user, requiredRole, router]);
 
-  // Show loading state
+  // Show loading state while checking auth
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -40,10 +52,22 @@ export function ProtectedRoute({
   }
 
   // Check role
-  if (requiredRole && user.role !== requiredRole && user.role !== "admin") {
+  if (requiredRole === "admin" && user.role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600">Access Denied</p>
+        <p className="text-red-600">Access Denied - Admin Only</p>
+      </div>
+    );
+  }
+
+  if (
+    requiredRole === "member" &&
+    user.role !== "member" &&
+    user.role !== "admin"
+  ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-600">Access Denied - Members Only</p>
       </div>
     );
   }

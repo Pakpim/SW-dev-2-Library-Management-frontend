@@ -1,18 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authAPI } from "@/lib/auth";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser, setIsAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/books");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,10 +29,8 @@ export default function LoginPage() {
     try {
       const response = await authAPI.login(email, password);
 
-      // Save token and user
-      authAPI.saveToken(response.token, response.user);
-      setUser(response.user);
-      setIsAuthenticated(true);
+      // Use context login method
+      login(response.token, response.user);
 
       // Redirect to books page
       router.push("/books");

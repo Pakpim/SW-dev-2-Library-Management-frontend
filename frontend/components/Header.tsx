@@ -2,17 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { authAPI } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
   const router = useRouter();
-  const { user, setUser, setIsAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    authAPI.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+    logout();
     router.push("/login");
   };
 
@@ -40,9 +37,11 @@ export default function Header() {
           {user ? (
             <>
               {/* User Info */}
-              <div className="text-sm">
-                <p className="font-medium">{user.name}</p>
-                <p className="text-blue-100 capitalize text-xs">{user.role}</p>
+              <div>
+                <p className="font-medium">{user && user?.name}</p>
+                <p className="text-blue-100 capitalize text-xs">
+                  {user && user?.role}
+                </p>
               </div>
 
               {/* Role-based Links */}

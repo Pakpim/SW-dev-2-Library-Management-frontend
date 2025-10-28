@@ -4,15 +4,25 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Public routes - no auth required
-  const publicRoutes = ["/", "/books", "/login", "/register"];
+  // Get auth data from cookies (we'll need to store token in cookies too)
+  // For now, we'll check on client side
+
+  // Public routes accessible to everyone
+  const publicRoutes = ["/", "/books"];
+
+  // Auth routes (login/register) - should redirect to /books if already logged in
+  const authRoutes = ["/login", "/register"];
+
   if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // For protected routes, we check on client side via useAuth hook
-  // This middleware just passes through to client components
+  // Auth routes will be handled on client side (we'll add checks in the page components)
+  if (authRoutes.includes(pathname)) {
+    return NextResponse.next();
+  }
 
+  // Protected routes will be handled by ProtectedRoute component on client side
   return NextResponse.next();
 }
 
