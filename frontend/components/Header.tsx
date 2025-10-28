@@ -1,30 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { authAPI } from "@/lib/auth";
 
 export default function Header() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { user, setUser, setIsAuthenticated } = useAuth();
 
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
+  const handleLogout = () => {
+    authAPI.logout();
+    setUser(null);
+    setIsAuthenticated(false);
     router.push("/login");
   };
-
-  // Don't render until session is loaded
-  if (status === "loading") {
-    return (
-      <header className="bg-blue-600 text-white shadow-md">
-        <nav className="max-w-7xl mx-auto px-4 py-4" />
-      </header>
-    );
-  }
-
-  const user = session?.user as
-    | { name: string; role: "member" | "admin" }
-    | undefined;
 
   return (
     <header className="bg-blue-600 text-white shadow-md">
@@ -92,7 +82,7 @@ export default function Header() {
             </>
           ) : (
             <>
-              {/* No Auth - Login Link */}
+              {/* No Auth - Login Link Only */}
               <Link
                 href="/login"
                 className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded transition font-medium"

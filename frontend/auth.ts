@@ -46,40 +46,62 @@ const authConfig: any = {
         }
 
         try {
-          // Call backend login endpoint
-          const response = await fetch(
-            "http://localhost:5000/api/v1/auth/login",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
-            }
-          );
+          const backendUrl = "http://localhost:5000";
+          const loginUrl = `${backendUrl}/api/v1/auth/login`;
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Invalid credentials");
+          console.log("Attempting to authenticate with:", loginUrl);
+
+          const response = await fetch(loginUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
+
+          console.log("Backend response status:", response.status);
+
+          // Check if response is JSON
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error("Backend response is not JSON:", text);
+            throw new Error(
+              "Backend error: Server returned invalid response. Is the backend running on port 5000?"
+            );
           }
 
           const data = await response.json();
+          console.log("Backend response data:", data);
+
+          if (!response.ok) {
+            throw new Error(
+              data.msg || data.error || data.message || "Invalid credentials"
+            );
+          }
+
+          // Backend returns user object and token
+          if (!data.user || !data.token) {
+            console.error("Invalid backend response format:", data);
+            throw new Error("Backend returned invalid data format");
+          }
 
           // Return user object with token
           return {
-            id: data.user.id,
+            id: data.user.id || data.user._id,
             name: data.user.name,
             email: data.user.email,
-            role: data.user.role,
+            role: data.user.role || "member",
             token: data.token,
           };
         } catch (error) {
-          throw new Error(
-            error instanceof Error ? error.message : "Authentication failed"
-          );
+          const message =
+            error instanceof Error ? error.message : "Authentication failed";
+          console.error("Auth error:", message);
+          throw new Error(message);
         }
       },
     }),

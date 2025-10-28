@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useState, FormEvent } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { authAPI } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setUser, setIsAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,21 +20,17 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+      const response = await authAPI.login(email, password);
 
-      if (!result?.ok) {
-        setError(result?.error || "Login failed");
-        return;
-      }
+      // Save token and user
+      authAPI.saveToken(response.token, response.user);
+      setUser(response.user);
+      setIsAuthenticated(true);
 
       // Redirect to books page
       router.push("/books");
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Invalid email or password");
       console.error("Login error:", err);
     } finally {
       setIsLoading(false);

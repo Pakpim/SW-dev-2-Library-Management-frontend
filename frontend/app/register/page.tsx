@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useState, FormEvent } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { authAPI } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { setUser, setIsAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,45 +35,24 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // Register user with backend
-      const registerResponse = await fetch(
-        "http://localhost:5000/api/v1/auth/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-          credentials: "include",
-        }
+      // Register user
+      const response = await authAPI.register(
+        formData.name,
+        formData.email,
+        formData.tel,
+        formData.password,
+        formData.role
       );
 
-      const registerData = await registerResponse.json();
-
-      if (!registerResponse.ok) {
-        setError(registerData.error || "Registration failed");
-        return;
-      }
-
-      // After successful registration, sign in with NextAuth
-      const result = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      if (!result?.ok) {
-        setError(
-          "Registration successful, but auto-login failed. Please log in manually."
-        );
-        router.push("/login");
-        return;
-      }
+      // Save token and user
+      authAPI.saveToken(response.token, response.user);
+      setUser(response.user);
+      setIsAuthenticated(true);
 
       // Redirect to books page
       router.push("/books");
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Registration failed. Please try again.");
       console.error("Registration error:", err);
     } finally {
       setIsLoading(false);
