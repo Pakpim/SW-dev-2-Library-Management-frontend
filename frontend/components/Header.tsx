@@ -6,12 +6,28 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
+    router.refresh(); // Refresh to update server components
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <header className="bg-blue-600 text-white shadow-md">
+        <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="text-2xl font-bold">
+              📚 LibManager
+            </Link>
+          </div>
+        </nav>
+      </header>
+    );
+  }
 
   return (
     <header className="bg-blue-600 text-white shadow-md">

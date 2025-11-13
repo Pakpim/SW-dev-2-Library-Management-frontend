@@ -13,8 +13,6 @@ export interface AuthResponse {
 }
 
 const BACKEND_URL = "http://localhost:5000";
-const TOKEN_KEY = "auth_token";
-const USER_KEY = "auth_user";
 
 export const authAPI = {
   async login(email: string, password: string): Promise<AuthResponse> {
@@ -24,6 +22,7 @@ export const authAPI = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
+      credentials: "include", // Important for cookies
     });
 
     if (!response.ok) {
@@ -47,6 +46,7 @@ export const authAPI = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ name, email, tel, password, role }),
+      credentials: "include", // Important for cookies
     });
 
     if (!response.ok) {
@@ -57,41 +57,44 @@ export const authAPI = {
     return data;
   },
 
-  saveToken(token: string, user: User) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
+  // Save auth data via API route (stores in httpOnly cookie)
+  async saveSession(token: string, user: User) {
+    await fetch("/api/auth/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token, user }),
+    });
+  },
+
+  // Get user from API route (reads from httpOnly cookie)
+  async getSession(): Promise<{ user: User | null; token: string | null }> {
+    try {
+      const response = await fetch("/api/auth/session", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        return { user: null, token: null };
+      }
+
+      const data = await response.json();
+      return data;
+    } catch {
+      return { user: null, token: null };
     }
   },
 
-  getToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(TOKEN_KEY);
-    }
-    return null;
+  // Logout via API route (clears httpOnly cookie)
+  async logout() {
+    await fetch("/api/auth/session", {
+      method: "DELETE",
+    });
   },
 
-  getUser(): User | null {
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem(USER_KEY);
-      return user ? JSON.parse(user) : null;
-    }
-    return null;
-  },
-
-  logout() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-    }
-  },
-
-  isAuthenticated(): boolean {
-    return this.getToken() !== null;
-  },
-
-  getAuthHeader() {
-    const token = this.getToken();
+  getAuthHeader(token: string) {
     return token ? { Authorization: `Bearer ${token}` } : {};
   },
 };

@@ -29,11 +29,12 @@ export default function LoginPage() {
     try {
       const response = await authAPI.login(email, password);
 
-      // Use context login method
-      login(response.token, response.user);
+      // Use context login method (now async with cookies)
+      await login(response.token, response.user);
 
       // Redirect to books page
       router.push("/books");
+      router.refresh(); // Refresh to update server components
     } catch (err) {
       setError("Invalid email or password");
       console.error("Login error:", err);
