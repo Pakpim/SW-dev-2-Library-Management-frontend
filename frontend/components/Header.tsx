@@ -15,7 +15,7 @@ export default function Header() {
 
   return (
     <header className="bg-blue-600 text-white shadow-md">
-      <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between    ">
         {/* Left: Logo and Books Link */}
         <div className="flex items-center gap-8">
           <Link
