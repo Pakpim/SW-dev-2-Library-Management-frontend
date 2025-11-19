@@ -16,7 +16,7 @@ export interface Reservation {
 export interface ReservationInfo {
   _id: string;
   book: Book;
-  user: User;
+  user: string;
   borrowDate: string;
   pickupDate: string;
 }

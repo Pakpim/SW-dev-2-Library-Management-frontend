@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ReservationCard from "@/components/ReservationCard";
 import { useReservationContext } from "@/contexts/ReservationContext";
 import { Reservation, ReservationInfo } from "@/lib/reservation";
+import { useBookContext } from "@/contexts/BookContext";
 
 export default function MyReservationsPage() {
   const {
@@ -14,6 +15,7 @@ export default function MyReservationsPage() {
     deleteReservation,
     updateReservation,
   } = useReservationContext();
+  const { books, fetchBooks } = useBookContext();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,12 +48,12 @@ export default function MyReservationsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {/* {reservations.map((reservation: ReservationInfo) => (
-              <ReservationCard
-                key={reservation._id}
-                reservation={reservation}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
+              // <ReservationCard
+              //   key={reservation._id}
+              //   reservation={reservation}
+              //   onEdit={handleEdit}
+              //   onDelete={handleDelete}
+              // />
             ))} */}
           </div>
         )}

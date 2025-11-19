@@ -55,22 +55,22 @@ export const ReservationProvider = ({
       const data = await reservationAPI.getAll();
       console.log(
         "find book reserv",
-        books.filter((b) => {
-          b._id === data[0].book;
-        })
+        books.find((b) => b._id.toString() === books[4]._id.toString())
       );
-      const mappedReservations = data.map(
-        (reservation: Reservation) =>
-          ({
-            _id: reservation._id,
-            book: books.filter((b) => {
-              b._id = reservation.book;
-            })[0],
-            user: user,
-            borrowDate: reservation.borrowDate,
-            pickupDate: reservation.pickupDate,
-          } as ReservationInfo)
-      );
+      console.log("find reserv book", data[0].book);
+      console.log("books", books);
+      const mappedReservations = data.map((reservation: Reservation) => {
+        const foundBook = books.find(
+          (b) => b._id.toString() === reservation.book.toString()
+        );
+        return {
+          _id: reservation._id,
+          book: foundBook,
+          user: reservation.user, // Use user from reservation, not session
+          borrowDate: reservation.borrowDate,
+          pickupDate: reservation.pickupDate,
+        } as ReservationInfo;
+      });
       setReservations(mappedReservations);
     } catch (err) {
       console.error("Fetch reservations failed:", err);
@@ -92,7 +92,7 @@ export const ReservationProvider = ({
       book: books.filter((b) => {
         b._id = result.book;
       })[0],
-      user: user,
+      user: user?.name,
       borrowDate: result.borrowDate,
       pickupDate: result.pickupDate,
     } as ReservationInfo;
@@ -106,7 +106,7 @@ export const ReservationProvider = ({
       book: books.filter((b) => {
         b._id = result.book;
       })[0],
-      user: user,
+      user: user?.name,
       borrowDate: result.borrowDate,
       pickupDate: result.pickupDate,
     } as ReservationInfo;

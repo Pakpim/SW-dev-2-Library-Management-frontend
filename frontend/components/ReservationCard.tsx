@@ -44,7 +44,7 @@ export default function ReservationCard({
         <div className="space-y-2 mb-4 text-sm text-gray-600">
           <p>
             <span className="font-medium text-gray-700">User:</span>{" "}
-            {reservation.user.name}
+            {reservation.user}
           </p>
           <p>
             <span className="font-medium text-gray-700">Start Date:</span>{" "}

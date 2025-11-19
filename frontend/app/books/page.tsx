@@ -1,8 +1,10 @@
 "use client";
 
+import { useBookContext } from "@/contexts/BookContext";
 import { useReservationContext } from "@/contexts/ReservationContext";
+import { Book } from "@/lib/book";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 declare module "next-auth" {
   interface Session {
@@ -16,16 +18,6 @@ declare module "next-auth" {
   }
 }
 
-interface Book {
-  _id: string;
-  title: string;
-  author: string;
-  ISBN: string;
-  publisher: string;
-  availableAmount: number;
-  coverPicture: string;
-}
-
 interface User {
   id: string;
   name: string;
@@ -35,7 +27,7 @@ interface User {
 export default function BooksPage() {
   const { data: session } = useSession();
 
-  const [books, setBooks] = useState<Book[]>([]);
+  // const [books, setBooks] = useState<Book[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,6 +45,7 @@ export default function BooksPage() {
     updateReservation,
     deleteReservation,
   } = useReservationContext();
+  const { books, fetchBooks } = useBookContext();
 
   useEffect(() => {
     fetchReservations();
@@ -108,27 +101,27 @@ export default function BooksPage() {
     setFilteredBooks(filtered);
   }, [books, searchTerm, authorFilter, publisherFilter]);
 
-  const fetchBooks = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("http://localhost:5000/api/v1/books", {
-        credentials: "include",
-      });
+  // const fetchBooks = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     const response = await fetch("http://localhost:5000/api/v1/books", {
+  //       credentials: "include",
+  //     });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch books");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch books");
+  //     }
 
-      const data = await response.json();
-      setBooks(data.data || data || []);
-      setError("");
-    } catch (err) {
-      setError("Failed to load books. Please try again later.");
-      console.error("Error fetching books:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     const data = await response.json();
+  //     setBooks(data.data || data || []);
+  //     setError("");
+  //   } catch (err) {
+  //     setError("Failed to load books. Please try again later.");
+  //     console.error("Error fetching books:", err);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleReserveBook = async (bookId: string) => {
     const today = new Date();
