@@ -1,8 +1,24 @@
 "use client";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useReservationContext } from "@/contexts/ReservationContext";
+import { useEffect } from "react";
 
 export default function AdminReservationsManagePage() {
+  const {
+    reservations,
+    loading,
+    fetchReservations,
+    createReservation,
+    updateReservation,
+    deleteReservation,
+  } = useReservationContext();
+
+  useEffect(() => {
+    fetchReservations();
+    console.log("reservation", reservations);
+  }, []);
+
   return (
     <ProtectedRoute requiredRole="admin">
       <div className="max-w-6xl mx-auto px-4 py-8">

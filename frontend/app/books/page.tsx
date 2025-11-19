@@ -1,6 +1,20 @@
 "use client";
 
+import { useReservationContext } from "@/contexts/ReservationContext";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      role?: "member" | "admin";
+    };
+  }
+}
 
 interface Book {
   _id: string;
@@ -19,6 +33,8 @@ interface User {
 }
 
 export default function BooksPage() {
+  const { data: session } = useSession();
+
   const [books, setBooks] = useState<Book[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,18 +44,34 @@ export default function BooksPage() {
   const [authorFilter, setAuthorFilter] = useState("");
   const [publisherFilter, setPublisherFilter] = useState("");
   const [reservingBookId, setReservingBookId] = useState<string | null>(null);
+  const [reservationCount, setReservationCount] = useState(0);
+  const {
+    reservations,
+    loading,
+    fetchReservations,
+    createReservation,
+    updateReservation,
+    deleteReservation,
+  } = useReservationContext();
+
+  useEffect(() => {
+    fetchReservations();
+    setReservationCount(reservations.length);
+    console.log("HI");
+
+    console.log("reservation", reservations);
+  }, []);
 
   // Fetch user from localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        console.error("Failed to parse stored user");
-      }
+    if (session?.user) {
+      setUser({
+        id: session.user.id,
+        name: session.user.name ?? "customer",
+        role: session.user.role as "member" | "admin",
+      });
     }
-  }, []);
+  }, [session]);
 
   // Fetch books from backend
   useEffect(() => {
@@ -99,6 +131,15 @@ export default function BooksPage() {
   };
 
   const handleReserveBook = async (bookId: string) => {
+    const today = new Date();
+    const borrowDate = today.toDateString();
+    createReservation({
+      book: bookId,
+      borrowDate: borrowDate,
+      pickupDate: borrowDate,
+    });
+    setReservationCount(reservationCount + 1);
+    return;
     if (!user) {
       alert("Please login to reserve books");
       return;
@@ -212,8 +253,7 @@ export default function BooksPage() {
           {filteredBooks.map((book) => (
             <div
               key={book._id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
-            >
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
               {/* Book Cover */}
               <div className="relative h-48 bg-gray-200 overflow-hidden">
                 <img
@@ -250,21 +290,25 @@ export default function BooksPage() {
                       book.availableAmount > 0
                         ? "text-green-600"
                         : "text-red-600"
-                    }
-                  >
+                    }>
                     {book.availableAmount}
                   </span>
                 </p>
-
+                <p>
+                  test {user?.id ?? "no"} {user?.role}
+                </p>
                 {/* Reserve Button (for members only) */}
                 {user && user.role === "member" && (
                   <button
                     onClick={() => handleReserveBook(book._id)}
                     disabled={
-                      book.availableAmount === 0 || reservingBookId === book._id
+                      book.availableAmount === 0 ||
+                      reservations.filter((r) => {
+                        r.book === book;
+                      }).length > 0 ||
+                      reservationCount >= 3
                     }
-                    className="w-full mt-4 py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                  >
+                    className="w-full mt-4 py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition">
                     {reservingBookId === book._id ? "Reserving..." : "Reserve"}
                   </button>
                 )}
