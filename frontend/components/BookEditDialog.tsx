@@ -10,6 +10,7 @@ import {
 } from "./ui/dialog";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Book } from "@/lib/book";
+import Compressor from "compressorjs";
 
 export default function BookEditDialog({
   books,

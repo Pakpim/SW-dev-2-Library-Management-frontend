@@ -15,9 +15,14 @@ export function ProtectedRoute({
   requiredRole,
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
   useEffect(() => {
+    // Don't redirect while still loading auth state
+    if (loading) {
+      return;
+    }
+
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
       router.push("/login");
@@ -40,13 +45,21 @@ export function ProtectedRoute({
       router.push("/books");
       return;
     }
-  }, [isAuthenticated, user, requiredRole, router]);
+  }, [isAuthenticated, user, requiredRole, router, loading]);
 
   // Show loading state while checking auth
-  if (!isAuthenticated || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Redirecting to login...</p>
       </div>
     );
   }

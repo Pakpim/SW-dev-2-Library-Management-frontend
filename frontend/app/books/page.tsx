@@ -1,140 +1,121 @@
 "use client";
 
+import { useBookContext } from "@/contexts/BookContext";
+import { useReservationContext } from "@/contexts/ReservationContext";
+import { Book } from "@/lib/book";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-
-interface Book {
-  _id: string;
-  title: string;
-  author: string;
-  ISBN: string;
-  publisher: string;
-  availableAmount: number;
-  coverPicture: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-  role: "member" | "admin";
-}
+import ReservationDialog from "@/components/ReservationDialog";
 
 export default function BooksPage() {
-  const [books, setBooks] = useState<Book[]>([]);
+  const { user } = useAuth();
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [user, setUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [authorFilter, setAuthorFilter] = useState("");
   const [publisherFilter, setPublisherFilter] = useState("");
-  const [reservingBookId, setReservingBookId] = useState<string | null>(null);
+  const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
-  // Fetch user from localStorage
+  const { reservations, fetchReservations, createReservation } =
+    useReservationContext();
+  const { books, fetchBooks } = useBookContext();
+
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        console.error("Failed to parse stored user");
+    const loadData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchReservations(), fetchBooks()]);
+      setIsLoading(false);
+    };
+    loadData();
+  }, []);
+
+  // Filter books when search/filter terms change (using useMemo would be better)
+  useEffect(() => {
+    const filterBooks = () => {
+      let filtered = books;
+
+      // Search by title or ISBN
+      if (searchTerm) {
+        filtered = filtered.filter(
+          (book) =>
+            book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            book.ISBN.toLowerCase().includes(searchTerm.toLowerCase())
+        );
       }
-    }
-  }, []);
 
-  // Fetch books from backend
-  useEffect(() => {
-    fetchBooks();
-  }, []);
+      // Filter by author
+      if (authorFilter) {
+        filtered = filtered.filter((book) =>
+          book.author.toLowerCase().includes(authorFilter.toLowerCase())
+        );
+      }
 
-  // Filter books when search/filter terms change
-  useEffect(() => {
-    let filtered = books;
+      // Filter by publisher
+      if (publisherFilter) {
+        filtered = filtered.filter((book) =>
+          book.publisher.toLowerCase().includes(publisherFilter.toLowerCase())
+        );
+      }
 
-    // Search by title or ISBN
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (book) =>
-          book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          book.ISBN.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+      setFilteredBooks(filtered);
+    };
 
-    // Filter by author
-    if (authorFilter) {
-      filtered = filtered.filter((book) =>
-        book.author.toLowerCase().includes(authorFilter.toLowerCase())
-      );
-    }
-
-    // Filter by publisher
-    if (publisherFilter) {
-      filtered = filtered.filter((book) =>
-        book.publisher.toLowerCase().includes(publisherFilter.toLowerCase())
-      );
-    }
-
-    setFilteredBooks(filtered);
+    filterBooks();
   }, [books, searchTerm, authorFilter, publisherFilter]);
 
-  const fetchBooks = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("http://localhost:5000/api/v1/books", {
-        credentials: "include",
-      });
+  const handleReserveBook = async (bookId: string) => {
+    const book = books.find((b) => b._id === bookId);
+    if (!book) return;
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch books");
-      }
-
-      const data = await response.json();
-      setBooks(data.data || data || []);
-      setError("");
-    } catch (err) {
-      setError("Failed to load books. Please try again later.");
-      console.error("Error fetching books:", err);
-    } finally {
-      setIsLoading(false);
-    }
+    setSelectedBook(book);
+    setReservationDialogOpen(true);
   };
 
-  const handleReserveBook = async (bookId: string) => {
-    if (!user) {
-      alert("Please login to reserve books");
+  const handleReservationSubmit = async (
+    borrowDate: string,
+    pickupDate: string
+  ) => {
+    if (!selectedBook || !user) return;
+
+    // Check if user has already reached limit (pending or approved only)
+    const activeReservations = reservations.filter(
+      (r) => r.status === "pending" || r.status === "approved"
+    );
+
+    if (activeReservations.length >= 3) {
+      alert("You have reached the maximum of 3 active reservations");
       return;
     }
 
     try {
-      setReservingBookId(bookId);
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        "http://localhost:5000/api/v1/reservations",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ book: bookId }),
-          credentials: "include",
-        }
+      await createReservation({
+        book: selectedBook._id,
+        borrowDate,
+        pickupDate,
+        status: "pending",
+      });
+
+      alert(
+        "Reservation request submitted successfully! Awaiting admin approval."
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Failed to reserve book");
-        return;
-      }
-
-      alert("Book reserved successfully!");
-      fetchBooks();
+      await fetchReservations();
+      await fetchBooks();
+      setReservationDialogOpen(false);
+      setSelectedBook(null);
     } catch (err) {
-      alert("An error occurred while reserving the book");
+      alert("Failed to create reservation request");
       console.error("Reservation error:", err);
-    } finally {
-      setReservingBookId(null);
     }
+  };
+
+  // Check if user has an active reservation for a specific book
+  const hasActiveReservationForBook = (bookId: string): boolean => {
+    return reservations.some(
+      (r) =>
+        r.book?._id === bookId &&
+        (r.status === "pending" || r.status === "approved")
+    );
   };
 
   return (
@@ -142,12 +123,6 @@ export default function BooksPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">
         📖 Available Books
       </h1>
-
-      {error && (
-        <div className="mb-6 rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
 
       {/* Search and Filter Section */}
       <div className="mb-8 space-y-4 bg-white p-6 rounded-lg shadow">
@@ -226,6 +201,7 @@ export default function BooksPage() {
                       "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22150%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22150%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E";
                   }}
                 />
+                \{" "}
               </div>
 
               {/* Book Info */}
@@ -257,21 +233,49 @@ export default function BooksPage() {
                 </p>
 
                 {/* Reserve Button (for members only) */}
-                {user && user.role === "member" && (
-                  <button
-                    onClick={() => handleReserveBook(book._id)}
-                    disabled={
-                      book.availableAmount === 0 || reservingBookId === book._id
-                    }
-                    className="w-full mt-4 py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                  >
-                    {reservingBookId === book._id ? "Reserving..." : "Reserve"}
-                  </button>
-                )}
+                {user &&
+                  user.role === "member" &&
+                  book.availableAmount != 0 &&
+                  !hasActiveReservationForBook(book._id) && (
+                    <button
+                      onClick={() => handleReserveBook(book._id)}
+                      disabled={
+                        reservations.filter(
+                          (r) =>
+                            r.status === "pending" || r.status === "approved"
+                        ).length >= 3
+                      }
+                      className="w-full mt-4 py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+                    >
+                      Reserve
+                    </button>
+                  )}
+
+                {/* Already Reserved Badge */}
+                {user &&
+                  user.role === "member" &&
+                  hasActiveReservationForBook(book._id) && (
+                    <div className="w-full mt-4 py-2 px-4 bg-green-100 text-green-700 font-medium rounded-md text-center">
+                      Already Reserved
+                    </div>
+                  )}
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Reservation Dialog */}
+      {selectedBook && (
+        <ReservationDialog
+          book={selectedBook}
+          isOpen={reservationDialogOpen}
+          onClose={() => {
+            setReservationDialogOpen(false);
+            setSelectedBook(null);
+          }}
+          onSubmit={handleReservationSubmit}
+        />
       )}
     </div>
   );

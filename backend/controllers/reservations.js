@@ -8,15 +8,21 @@ const mongoose = require("mongoose");
 exports.getReservations = async (req, res, next) => {
   try {
     let requests;
-    
+
     if (req.user.role === "admin") {
       requests = await Reservation.find()
         .populate("user", "name email role")
-        .populate("book", "title author ISBN publisher availableAmount");
+        .populate(
+          "book",
+          "title author ISBN publisher availableAmount coverPicture"
+        );
     } else {
       requests = await Reservation.find({ user: req.user.id })
         .populate("user", "name email role")
-        .populate("book", "title author ISBN publisher availableAmount");
+        .populate(
+          "book",
+          "title author ISBN publisher availableAmount coverPicture"
+        );
     }
 
     res.status(200).json({
@@ -35,11 +41,16 @@ exports.getReservations = async (req, res, next) => {
 exports.getReservation = async (req, res, next) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, error: "Invalid reservation id" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid reservation id" });
     }
     const request = await Reservation.findById(req.params.id)
       .populate("user", "name email role")
-      .populate("book", "title author ISBN publisher availableAmount");
+      .populate(
+        "book",
+        "title author ISBN publisher availableAmount coverPicture"
+      );
 
     if (!request) {
       return res.status(404).json({
@@ -48,7 +59,10 @@ exports.getReservation = async (req, res, next) => {
       });
     }
 
-    if (req.user.role === "member" && request.user._id.toString() !== req.user.id) {
+    if (
+      req.user.role === "member" &&
+      request.user._id.toString() !== req.user.id
+    ) {
       return res.status(403).json({
         success: false,
         error: "Not authorized to view this reservation",
@@ -72,49 +86,67 @@ exports.createReservation = async (req, res, next) => {
     if (req.user.role !== "member") {
       return res.status(403).json({
         success: false,
-        error: "Only member can create reservations",
+        error: "Only members can create reservations",
       });
     }
 
-    const existingCount = await Reservation.countDocuments({ user: req.user.id });
+    // Check for pending/approved reservations only (not rejected)
+    const existingCount = await Reservation.countDocuments({
+      user: req.user.id,
+      status: { $in: ["pending", "approved"] },
+    });
+
     if (existingCount >= 3) {
       return res.status(400).json({
         success: false,
-        error: "Reservation limit reached (max 3)",
+        error: "Reservation limit reached (max 3 active reservations)",
       });
     }
 
-    // Validation: reservation date must not be earlier than today
+    // Validation: reservation date must not be before today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     const borrowDate = new Date(req.body.borrowDate);
     const pickupDate = new Date(req.body.pickupDate);
+
     if (isNaN(borrowDate.getTime())) {
       return res.status(400).json({
         success: false,
         error: "Invalid reservation (borrow) date",
       });
     }
+
     if (isNaN(pickupDate.getTime())) {
       return res.status(400).json({
         success: false,
         error: "Invalid pickup date",
       });
     }
+
     if (borrowDate < today) {
       return res.status(400).json({
         success: false,
-        error: "Reservation date must not be earlier than today",
+        error: "Reservation date cannot be before today",
       });
     }
+
+    if (pickupDate < today) {
+      return res.status(400).json({
+        success: false,
+        error: "Pickup date cannot be before today",
+      });
+    }
+
     if (pickupDate < borrowDate) {
       return res.status(400).json({
         success: false,
-        error: "Pick-up date must not be earlier than reservation date",
+        error: "Pickup date must not be earlier than reservation date",
       });
     }
 
     const book = await Book.findById(req.body.book);
+
     if (!book) {
       return res.status(400).json({
         success: false,
@@ -122,9 +154,11 @@ exports.createReservation = async (req, res, next) => {
       });
     }
 
+    // Create reservation request with pending status (no book availability update)
     const request = await Reservation.create({
       ...req.body,
       user: req.user.id,
+      status: "pending",
     });
 
     res.status(201).json({
@@ -142,7 +176,9 @@ exports.createReservation = async (req, res, next) => {
 exports.updateReservation = async (req, res, next) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, error: "Invalid reservation id" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid reservation id" });
     }
     let request = await Reservation.findById(req.params.id);
 
@@ -153,47 +189,79 @@ exports.updateReservation = async (req, res, next) => {
       });
     }
 
-    if (req.user.role === "member" && request.user.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        error: "Not authorized to edit this reservation",
-      });
+    // Members can only edit their own pending reservations
+    if (req.user.role === "member") {
+      if (request.user.toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          error: "Not authorized to edit this reservation",
+        });
+      }
+      // Members cannot change status
+      if (req.body.status) {
+        return res.status(403).json({
+          success: false,
+          error: "Members cannot change reservation status",
+        });
+      }
     }
 
-    // Validation: reservation date must not be earlier than today
+    // Validation: dates must not be before today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const borrowDate = new Date(req.body.borrowDate);
-    const pickupDate = new Date(req.body.pickupDate);
-    if (req.body.borrowDate && isNaN(borrowDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid reservation (borrow) date",
-      });
+
+    if (req.body.borrowDate) {
+      const borrowDate = new Date(req.body.borrowDate);
+      if (isNaN(borrowDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid reservation (borrow) date",
+        });
+      }
+      if (borrowDate < today) {
+        return res.status(400).json({
+          success: false,
+          error: "Reservation date cannot be before today",
+        });
+      }
     }
-    if (req.body.pickupDate && isNaN(pickupDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid pickup date",
-      });
+
+    if (req.body.pickupDate) {
+      const pickupDate = new Date(req.body.pickupDate);
+      if (isNaN(pickupDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid pickup date",
+        });
+      }
+      if (pickupDate < today) {
+        return res.status(400).json({
+          success: false,
+          error: "Pickup date cannot be before today",
+        });
+      }
     }
-    if (req.body.borrowDate && borrowDate < today) {
-      return res.status(400).json({
-        success: false,
-        error: "Reservation date must not be earlier than today",
-      });
-    }
-    if (req.body.borrowDate && req.body.pickupDate && pickupDate < borrowDate) {
-      return res.status(400).json({
-        success: false,
-        error: "Pick-up date must not be earlier than reservation date",
-      });
+
+    if (req.body.borrowDate && req.body.pickupDate) {
+      const borrowDate = new Date(req.body.borrowDate);
+      const pickupDate = new Date(req.body.pickupDate);
+      if (pickupDate < borrowDate) {
+        return res.status(400).json({
+          success: false,
+          error: "Pickup date must not be earlier than reservation date",
+        });
+      }
     }
 
     request = await Reservation.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    });
+    })
+      .populate("user", "name email role")
+      .populate(
+        "book",
+        "title author ISBN publisher availableAmount coverPicture"
+      );
 
     res.status(200).json({
       success: true,
@@ -210,7 +278,9 @@ exports.updateReservation = async (req, res, next) => {
 exports.deleteReservation = async (req, res, next) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, error: "Invalid reservation id" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid reservation id" });
     }
     const request = await Reservation.findById(req.params.id);
 
@@ -238,5 +308,3 @@ exports.deleteReservation = async (req, res, next) => {
     next(error);
   }
 };
-
-

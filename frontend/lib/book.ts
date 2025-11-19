@@ -12,7 +12,8 @@ export interface Book {
   updatedAt: Date;
 }
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 export const bookAPI = {
   async getAll(): Promise<Book[]> {
@@ -46,8 +47,8 @@ export const bookAPI = {
     const res = await fetch(`${BACKEND_URL}/api/v1/books`, {
       method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       credentials: "include",
       body: JSON.stringify(book),
@@ -69,8 +70,8 @@ export const bookAPI = {
     const res = await fetch(`${BACKEND_URL}/api/v1/books/${id}`, {
       method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       credentials: "include",
       body: JSON.stringify(data),
@@ -89,15 +90,15 @@ export const bookAPI = {
     const res = await fetch(`${BACKEND_URL}/api/v1/books/${id}`, {
       method: "DELETE",
       headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       credentials: "include",
     });
 
     if (!res.ok) {
-        console.error("Delete book failed:", await res.text());
-        throw new Error("Failed to delete book");
+      console.error("Delete book failed:", await res.text());
+      throw new Error("Failed to delete book");
     }
   },
 };

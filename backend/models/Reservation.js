@@ -5,11 +5,15 @@ const RequestSchema = new mongoose.Schema(
     borrowDate: {
       type: Date,
       required: [true, "Please add a borrow date"],
-      default: Date.now,
     },
     pickupDate: {
       type: Date,
       required: [true, "Please add a pickup date"],
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
     },
     user: {
       type: mongoose.Schema.ObjectId,
@@ -46,5 +50,3 @@ RequestSchema.virtual("bookInfo", {
 });
 
 module.exports = mongoose.model("Reservation", RequestSchema);
-
-

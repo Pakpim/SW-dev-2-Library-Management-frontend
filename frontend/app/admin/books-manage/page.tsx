@@ -29,6 +29,7 @@ export default function AdminBooksManagePage() {
       );
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilteredBooks(filtered);
   }, [books, searchTerm]);
 
@@ -70,12 +71,13 @@ export default function AdminBooksManagePage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-20">
           {filteredBooks.map((book) => (
             <div
               key={book._id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-              {/* Book Cover */}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+            >
+              {/* Book Cover  TODO IMGS*/}
               <div className="relative h-48 bg-gray-200 overflow-hidden">
                 <img
                   src={book.coverPicture}
@@ -111,7 +113,8 @@ export default function AdminBooksManagePage() {
                       book.availableAmount > 0
                         ? "text-green-600"
                         : "text-red-600"
-                    }>
+                    }
+                  >
                     {book.availableAmount}
                   </span>
                 </p>
@@ -139,7 +142,8 @@ export default function AdminBooksManagePage() {
                     ) {
                       deleteBook(book._id);
                     }
-                  }}>
+                  }}
+                >
                   Delete
                 </button>
               </div>

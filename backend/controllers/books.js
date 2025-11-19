@@ -1,4 +1,5 @@
 const Book = require("../models/Book");
+const Reservation = require("../models/Reservation");
 const mongoose = require("mongoose");
 
 // @desc    Get all books
@@ -108,7 +109,10 @@ exports.deleteBook = async (req, res, next) => {
       });
     }
 
-    // Hard delete
+    // Delete all reservations for this book
+    await Reservation.deleteMany({ book: req.params.id });
+
+    // Hard delete the book
     await Book.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
@@ -158,5 +162,3 @@ exports.updateBookStock = async (req, res, next) => {
     next(error);
   }
 };
-
-

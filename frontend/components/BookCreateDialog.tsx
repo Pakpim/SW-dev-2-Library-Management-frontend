@@ -27,7 +27,7 @@ export default function BookCreateDialog({
   const [isbn, setIsbn] = useState<string>("");
   const [publisher, setPublisher] = useState<string>("");
   const [availableAmount, setAvailableAmount] = useState<number>(1);
-  const [coverPicture, setCoverPicture] = useState<File | undefined>();
+  const [coverPicture, setCoverPicture] = useState<string>("");
   const [validTitle, setValidTitle] = useState<boolean>(true);
   const [validIsbn, setValidIsbn] = useState<boolean>(true);
 
@@ -40,30 +40,16 @@ export default function BookCreateDialog({
     });
   }
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const image = e.target.files[0];
-      new Compressor(image, {
-        quality: 0.2,
-        success: (compressedResult: File) => {
-          // compressedResult has the compressed file.
-          // Use the compressed file to upload the images to your server.
-          setCoverPicture(compressedResult);
-        },
-      });
-    }
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const base64Image = await convertToBase64(coverPicture!);
+
     createBook({
       title: title,
       author: author,
       ISBN: isbn,
       publisher: publisher,
       availableAmount: availableAmount,
-      coverPicture: base64Image,
+      coverPicture: coverPicture,
     });
     resetForm();
     setOpen(false);
@@ -75,7 +61,7 @@ export default function BookCreateDialog({
     setIsbn("");
     setPublisher("");
     setAvailableAmount(0);
-    setCoverPicture(undefined);
+    setCoverPicture("");
     setValidTitle(true);
     setValidIsbn(true);
   };
@@ -85,7 +71,8 @@ export default function BookCreateDialog({
       open={open}
       onOpenChange={() => {
         setOpen(!open), resetForm();
-      }}>
+      }}
+    >
       <DialogTrigger className="px-4 py-2 text-white rounded-md bg-blue-600 hover:bg-blue-700">
         New Book
       </DialogTrigger>
@@ -93,7 +80,7 @@ export default function BookCreateDialog({
         <DialogHeader>
           <DialogTitle>New Book</DialogTitle>
           <DialogDescription>
-            Fill in the details of the new book here. Click save when you're
+            Fill in the details of the new book here. Click save when you are
             done.
           </DialogDescription>
         </DialogHeader>
@@ -102,21 +89,21 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="coverPicture"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Cover Picture
               </label>
+
               <input
                 required
-                placeholder="choose file"
-                type="file"
-                accept="image/*"
                 id="coverPicture"
-                onChange={handleUpload}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={coverPicture}
+                onChange={(e) => setCoverPicture(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {coverPicture && (
                 <img
-                  src={URL.createObjectURL(coverPicture)}
+                  src={coverPicture}
                   alt="Cover Preview"
                   className="mt-2 h-32 object-contain"
                 />
@@ -125,7 +112,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="title"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Book title
               </label>
               <input
@@ -151,7 +139,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="author"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Author
               </label>
               <input
@@ -165,7 +154,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="isbn"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 ISBN
               </label>
               <input
@@ -191,7 +181,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="publisher"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Publisher
               </label>
               <input
@@ -207,7 +198,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="availableAmount"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Available Amount
               </label>
               <input
@@ -226,13 +218,15 @@ export default function BookCreateDialog({
           <DialogFooter>
             <DialogClose
               className="px-4 py-2 text-white bg-yellow-400 rounded-md hover:bg-yellow-500"
-              onClick={resetForm}>
+              onClick={resetForm}
+            >
               Cancel
             </DialogClose>
             <button
               type="submit"
               className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-              disabled={!validTitle || !validIsbn}>
+              disabled={!validTitle || !validIsbn}
+            >
               ok
             </button>
           </DialogFooter>

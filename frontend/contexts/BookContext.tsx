@@ -6,7 +6,9 @@ import { Book, bookAPI } from "@/lib/book";
 interface BookContextType {
   books: Book[];
   fetchBooks: () => Promise<void>;
-  createBook: (book: Omit<Book, "_id" | "createdAt" | "updatedAt">) => Promise<void>;
+  createBook: (
+    book: Omit<Book, "_id" | "createdAt" | "updatedAt">
+  ) => Promise<void>;
   updateBook: (id: string, data: Partial<Book>) => Promise<void>;
   deleteBook: (id: string) => Promise<void>;
   loading: boolean;
@@ -28,7 +30,9 @@ export function BookProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createBook = async (book: Omit<Book, "_id" | "createdAt" | "updatedAt">) => {
+  const createBook = async (
+    book: Omit<Book, "_id" | "createdAt" | "updatedAt">
+  ) => {
     const result = await bookAPI.create(book);
     setBooks([...books, result]);
   };
@@ -45,7 +49,14 @@ export function BookProvider({ children }: { children: ReactNode }) {
 
   return (
     <BookContext.Provider
-      value={{ books, fetchBooks, createBook, updateBook, deleteBook, loading }}>
+      value={{
+        books,
+        fetchBooks,
+        createBook,
+        updateBook,
+        deleteBook,
+        loading,
+      }}>
       {children}
     </BookContext.Provider>
   );
