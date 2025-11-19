@@ -1,4 +1,4 @@
-import { authAPI, User } from "./auth";
+import { authAPI } from "./auth";
 import { Book } from "./book";
 
 export interface Reservation {
@@ -9,6 +9,7 @@ export interface Reservation {
   pickupDate: string;
   updatedAt: string;
   user: string;
+  status: "pending" | "approved" | "rejected";
   __v: number;
   _id: string;
 }
@@ -19,6 +20,7 @@ export interface ReservationInfo {
   user: string;
   borrowDate: string;
   pickupDate: string;
+  status: "pending" | "approved" | "rejected";
 }
 
 const BACKEND_URL =

@@ -1,8 +1,8 @@
 // lib/auth.ts
 export interface User {
-  id: string;
-  name: string;
-  email: string;
+  id?: string;
+  name?: string;
+  email?: string;
   role: "member" | "admin";
 }
 

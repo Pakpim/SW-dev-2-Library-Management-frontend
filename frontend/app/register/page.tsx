@@ -17,6 +17,12 @@ export default function RegisterPage() {
     role: "member",
   });
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    tel: "",
+    password: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -26,19 +32,92 @@ export default function RegisterPage() {
     }
   }, [isAuthenticated, router]);
 
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case "name":
+        if (value.trim().length < 2) {
+          return "Name must be at least 2 characters long";
+        }
+        if (!/^[a-zA-Z\s]+$/.test(value)) {
+          return "Name can only contain letters and spaces";
+        }
+        return "";
+
+      case "email":
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return "Please enter a valid email address";
+        }
+        return "";
+
+      case "tel":
+        const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
+        if (!phoneRegex.test(value)) {
+          return "Phone number must be at least 10 digits";
+        }
+        return "";
+
+      case "password":
+        if (value.length < 6) {
+          return "Password must be at least 6 characters long";
+        }
+        if (!/(?=.*[a-z])/.test(value)) {
+          return "Password must contain at least one lowercase letter";
+        }
+        if (!/(?=.*[A-Z])/.test(value)) {
+          return "Password must contain at least one uppercase letter";
+        }
+        if (!/(?=.*\d)/.test(value)) {
+          return "Password must contain at least one number";
+        }
+        return "";
+
+      default:
+        return "";
+    }
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+
+    // Update form data
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Validate and update errors
+    if (name !== "role") {
+      const errorMessage = validateField(name, value);
+      setErrors((prev) => ({
+        ...prev,
+        [name]: errorMessage,
+      }));
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+
+    // Validate all fields before submission
+    const newErrors = {
+      name: validateField("name", formData.name),
+      email: validateField("email", formData.email),
+      tel: validateField("tel", formData.tel),
+      password: validateField("password", formData.password),
+    };
+
+    setErrors(newErrors);
+
+    // Check if there are any validation errors
+    const hasErrors = Object.values(newErrors).some((error) => error !== "");
+    if (hasErrors) {
+      setError("Please fix all validation errors before submitting");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -98,11 +177,16 @@ export default function RegisterPage() {
                 type="text"
                 name="name"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  errors.name ? "border-red-500" : "border-gray-300"
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={handleChange}
               />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
             </div>
 
             {/* Email Input */}
@@ -118,11 +202,16 @@ export default function RegisterPage() {
                 type="email"
                 name="email"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="john@example.com"
                 value={formData.email}
                 onChange={handleChange}
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
             {/* Phone Number Input */}
@@ -138,11 +227,16 @@ export default function RegisterPage() {
                 type="tel"
                 name="tel"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  errors.tel ? "border-red-500" : "border-gray-300"
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="+1 (555) 000-0000"
                 value={formData.tel}
                 onChange={handleChange}
               />
+              {errors.tel && (
+                <p className="mt-1 text-sm text-red-600">{errors.tel}</p>
+              )}
             </div>
 
             {/* Password Input */}
@@ -159,11 +253,16 @@ export default function RegisterPage() {
                 name="password"
                 required
                 minLength={6}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  errors.password ? "border-red-500" : "border-gray-300"
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="Password (min. 6 characters)"
                 value={formData.password}
                 onChange={handleChange}
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
 
             {/* Role Selector */}

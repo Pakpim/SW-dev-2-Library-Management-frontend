@@ -36,16 +36,12 @@ export const ReservationProvider = ({
   const [reservations, setReservations] = useState<ReservationInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { books } = useBookContext();
-  const [user, setUser] = useState<Omit<User, "email"> | null>(null);
+  const [user, setUser] = useState<string>("");
   const { data: session } = useSession();
 
   useEffect(() => {
     if (session?.user) {
-      setUser({
-        id: session.user.id,
-        name: session.user.name ?? "customer",
-        role: session.user.role as "member" | "admin",
-      });
+      setUser(session.user.name ?? "customer");
     }
   }, [session]);
 
@@ -57,8 +53,7 @@ export const ReservationProvider = ({
         "find book reserv",
         books.find((b) => b._id.toString() === books[4]._id.toString())
       );
-      console.log("find reserv book", data[0].book);
-      console.log("books", books);
+
       const mappedReservations = data.map((reservation: Reservation) => {
         const foundBook = books.find(
           (b) => b._id.toString() === reservation.book.toString()
@@ -133,7 +128,8 @@ export const ReservationProvider = ({
         createReservation,
         updateReservation,
         deleteReservation,
-      }}>
+      }}
+    >
       {children}
     </ReservationContext.Provider>
   );

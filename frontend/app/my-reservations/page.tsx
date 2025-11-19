@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useEffect } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ReservationCard from "@/components/ReservationCard";
 import { useReservationContext } from "@/contexts/ReservationContext";
-import { Reservation, ReservationInfo } from "@/lib/reservation";
-import { useBookContext } from "@/contexts/BookContext";
+import { ReservationInfo } from "@/lib/reservation";
 
 export default function MyReservationsPage() {
   const {
@@ -15,28 +14,51 @@ export default function MyReservationsPage() {
     deleteReservation,
     updateReservation,
   } = useReservationContext();
-  const { books, fetchBooks } = useBookContext();
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReservations();
-    console.log("reserv???", reservations);
-  }, []);
+  }, [fetchReservations]);
 
-  const handleEdit = (id: string) => {
-    setEditingId(id);
+  const handleEdit = async (
+    id: string,
+    borrowDate: string,
+    pickupDate: string
+  ) => {
+    try {
+      await updateReservation(id, { borrowDate, pickupDate });
+      await fetchReservations();
+    } catch (error) {
+      alert("Failed to update reservation");
+      console.error(error);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await deleteReservation(id);
+    try {
+      await deleteReservation(id);
+      await fetchReservations();
+    } catch (error) {
+      alert("Failed to delete reservation");
+      console.error(error);
+    }
   };
+
+  const activeReservations = reservations.filter(
+    (r: ReservationInfo) => r.status === "pending" || r.status === "approved"
+  );
 
   return (
     <ProtectedRoute requiredRole="member">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          📚 My Reservations
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            📚 My Reservations
+          </h1>
+          <div className="text-sm text-gray-600">
+            Active: {activeReservations.length} / 3
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <p className="text-gray-600">Loading reservations...</p>
