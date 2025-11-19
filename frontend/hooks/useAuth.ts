@@ -5,15 +5,16 @@ import { useState } from "react";
 import { User, authAPI } from "@/lib/auth";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(() => authAPI.getUser());
-  const [isAuthenticated, setIsAuthenticated] = useState(() =>
-    authAPI.isAuthenticated()
-  );
+  return;
+  // const [user, setUser] = useState<User | null>(() => authAPI.getUser());
+  // const [isAuthenticated, setIsAuthenticated] = useState(() =>
+  //   authAPI.isAuthenticated()
+  // );
 
-  return {
-    user,
-    isAuthenticated,
-    setUser,
-    setIsAuthenticated,
-  };
+  // return {
+  //   user,
+  //   isAuthenticated,
+  //   setUser,
+  //   setIsAuthenticated,
+  // };
 }
