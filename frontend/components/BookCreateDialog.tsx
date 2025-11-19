@@ -10,6 +10,8 @@ import {
 } from "./ui/dialog";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Book } from "@/lib/book";
+import Dropzone from "react-dropzone";
+import { DropzoneContent, DropzoneEmptyState } from "./ui/shadcn-io/dropzone";
 
 export default function BookCreateDialog({
   createBook,
@@ -21,6 +23,13 @@ export default function BookCreateDialog({
   const [name, setName] = useState<string>("");
   const [author, setAuthor] = useState<string>("book.author");
   const [isbn, setIsbn] = useState<string>("book.ISBN");
+  const [coverPicture, setCoverPicture] = useState<File | undefined>();
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setCoverPicture(e.target.files[0]);
+    }
+  };
 
   return (
     <Dialog>
@@ -36,6 +45,27 @@ export default function BookCreateDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label
+              htmlFor="coverPicture"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Cover Picture
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              id="coverPicture"
+              onChange={handleUpload}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {coverPicture && (
+              <img
+                src={URL.createObjectURL(coverPicture)}
+                alt="Cover Preview"
+                className="mt-2 h-32 object-contain"
+              />
+            )}
+          </div>
           <div className="grid gap-2">
             <label
               htmlFor="name"
@@ -87,7 +117,9 @@ export default function BookCreateDialog({
                 ISBN: isbn,
                 publisher: "string",
                 availableAmount: 0,
-                coverPicture: "string",
+                coverPicture: coverPicture
+                  ? URL.createObjectURL(coverPicture)
+                  : "",
               });
             }}>
             ok
