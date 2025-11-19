@@ -12,11 +12,17 @@ exports.getReservations = async (req, res, next) => {
     if (req.user.role === "admin") {
       requests = await Reservation.find()
         .populate("user", "name email role")
-        .populate("book", "title author ISBN publisher availableAmount");
+        .populate(
+          "book",
+          "title author ISBN publisher availableAmount coverPicture"
+        );
     } else {
       requests = await Reservation.find({ user: req.user.id })
         .populate("user", "name email role")
-        .populate("book", "title author ISBN publisher availableAmount");
+        .populate(
+          "book",
+          "title author ISBN publisher availableAmount coverPicture"
+        );
     }
 
     res.status(200).json({
@@ -41,7 +47,10 @@ exports.getReservation = async (req, res, next) => {
     }
     const request = await Reservation.findById(req.params.id)
       .populate("user", "name email role")
-      .populate("book", "title author ISBN publisher availableAmount");
+      .populate(
+        "book",
+        "title author ISBN publisher availableAmount coverPicture"
+      );
 
     if (!request) {
       return res.status(404).json({
@@ -249,7 +258,10 @@ exports.updateReservation = async (req, res, next) => {
       runValidators: true,
     })
       .populate("user", "name email role")
-      .populate("book", "title author ISBN publisher availableAmount");
+      .populate(
+        "book",
+        "title author ISBN publisher availableAmount coverPicture"
+      );
 
     res.status(200).json({
       success: true,

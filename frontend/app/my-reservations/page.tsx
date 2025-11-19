@@ -17,7 +17,7 @@ export default function MyReservationsPage() {
 
   useEffect(() => {
     fetchReservations();
-  }, [fetchReservations]);
+  }, []);
 
   const handleEdit = async (
     id: string,

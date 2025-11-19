@@ -27,7 +27,7 @@ const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 const reservationAPI = {
-  async getAll(): Promise<Reservation[]> {
+  async getAll(): Promise<ReservationInfo[]> {
     const session = await authAPI.getSession();
     const token = session.token;
 
@@ -45,7 +45,7 @@ const reservationAPI = {
     return json.data; // backend returns { success, count, data: [...] }
   },
 
-  async getById(id: string): Promise<Reservation> {
+  async getById(id: string): Promise<ReservationInfo> {
     const session = await authAPI.getSession();
     const token = session.token;
 
@@ -68,7 +68,7 @@ const reservationAPI = {
       Reservation,
       "_id" | "id" | "createdAt" | "updatedAt" | "user" | "__v"
     >
-  ): Promise<Reservation> {
+  ): Promise<ReservationInfo> {
     const session = await authAPI.getSession();
     const token = session.token;
 
@@ -84,15 +84,18 @@ const reservationAPI = {
     });
 
     if (!res.ok) {
-      console.error("Create reservation failed:", await res.text());
-      throw new Error("Failed to create reservation");
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to create reservation");
     }
 
     const json = await res.json();
     return json.data;
   },
 
-  async update(id: string, data: Partial<Reservation>): Promise<Reservation> {
+  async update(
+    id: string,
+    data: Partial<Reservation>
+  ): Promise<ReservationInfo> {
     const session = await authAPI.getSession();
     const token = session.token;
 
@@ -108,8 +111,8 @@ const reservationAPI = {
     });
 
     if (!res.ok) {
-      console.error("Update reservation failed:", await res.text());
-      throw new Error("Failed to update reservation");
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to update reservation");
     }
 
     const json = await res.json();

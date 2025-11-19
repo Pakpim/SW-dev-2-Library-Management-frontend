@@ -6,9 +6,6 @@ import reservationAPI, {
   Reservation,
   ReservationInfo,
 } from "@/lib/reservation";
-import { useBookContext } from "./BookContext";
-import { useSession } from "next-auth/react";
-import { User } from "@/lib/auth";
 
 interface ReservationContextProps {
   reservations: ReservationInfo[];
@@ -35,43 +32,16 @@ export const ReservationProvider = ({
 }) => {
   const [reservations, setReservations] = useState<ReservationInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const { books } = useBookContext();
-  const [user, setUser] = useState<string>("");
-  const { data: session } = useSession();
-
-  useEffect(() => {
-    if (session?.user) {
-      setUser(session.user.name ?? "customer");
-    }
-  }, [session]);
 
   const fetchReservations = async () => {
     setLoading(true);
     try {
       const data = await reservationAPI.getAll();
-      console.log(
-        "find book reserv",
-        books.find((b) => b._id.toString() === books[4]._id.toString())
-      );
-
-      const mappedReservations = data.map((reservation: Reservation) => {
-        const foundBook = books.find(
-          (b) => b._id.toString() === reservation.book.toString()
-        );
-        return {
-          _id: reservation._id,
-          book: foundBook,
-          user: reservation.user, // Use user from reservation, not session
-          borrowDate: reservation.borrowDate,
-          pickupDate: reservation.pickupDate,
-        } as ReservationInfo;
-      });
-      setReservations(mappedReservations);
+      setReservations(data);
     } catch (err) {
       console.error("Fetch reservations failed:", err);
     } finally {
       setLoading(false);
-      console.log("fetch reserv", reservations);
     }
   };
 
@@ -82,32 +52,12 @@ export const ReservationProvider = ({
     >
   ) => {
     const result = await reservationAPI.create(data);
-    const mappedResult = {
-      _id: result._id,
-      book: books.filter((b) => {
-        b._id = result.book;
-      })[0],
-      user: user?.name,
-      borrowDate: result.borrowDate,
-      pickupDate: result.pickupDate,
-    } as ReservationInfo;
-    setReservations((prev) => [...prev, mappedResult]);
+    setReservations((prev) => [...prev, result]);
   };
 
   const updateReservation = async (id: string, data: Partial<Reservation>) => {
     const result = await reservationAPI.update(id, data);
-    const mappedResult = {
-      _id: result._id,
-      book: books.filter((b) => {
-        b._id = result.book;
-      })[0],
-      user: user?.name,
-      borrowDate: result.borrowDate,
-      pickupDate: result.pickupDate,
-    } as ReservationInfo;
-    setReservations((prev) =>
-      prev.map((r) => (r._id === id ? { ...r, ...mappedResult } : r))
-    );
+    setReservations((prev) => prev.map((r) => (r._id === id ? result : r)));
   };
 
   const deleteReservation = async (id: string) => {

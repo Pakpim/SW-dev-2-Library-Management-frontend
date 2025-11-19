@@ -100,10 +100,22 @@ export default function BooksPage() {
         "Reservation request submitted successfully! Awaiting admin approval."
       );
       await fetchReservations();
+      await fetchBooks();
+      setReservationDialogOpen(false);
+      setSelectedBook(null);
     } catch (err) {
       alert("Failed to create reservation request");
       console.error("Reservation error:", err);
     }
+  };
+
+  // Check if user has an active reservation for a specific book
+  const hasActiveReservationForBook = (bookId: string): boolean => {
+    return reservations.some(
+      (r) =>
+        r.book?._id === bookId &&
+        (r.status === "pending" || r.status === "approved")
+    );
   };
 
   return (
@@ -221,19 +233,31 @@ export default function BooksPage() {
                 </p>
 
                 {/* Reserve Button (for members only) */}
-                {user && user.role === "member" && (
-                  <button
-                    onClick={() => handleReserveBook(book._id)}
-                    disabled={
-                      reservations.filter(
-                        (r) => r.status === "pending" || r.status === "approved"
-                      ).length >= 3
-                    }
-                    className="w-full mt-4 py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                  >
-                    Reserve
-                  </button>
-                )}
+                {user &&
+                  user.role === "member" &&
+                  !hasActiveReservationForBook(book._id) && (
+                    <button
+                      onClick={() => handleReserveBook(book._id)}
+                      disabled={
+                        reservations.filter(
+                          (r) =>
+                            r.status === "pending" || r.status === "approved"
+                        ).length >= 3
+                      }
+                      className="w-full mt-4 py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+                    >
+                      Reserve
+                    </button>
+                  )}
+
+                {/* Already Reserved Badge */}
+                {user &&
+                  user.role === "member" &&
+                  hasActiveReservationForBook(book._id) && (
+                    <div className="w-full mt-4 py-2 px-4 bg-green-100 text-green-700 font-medium rounded-md text-center">
+                      Already Reserved
+                    </div>
+                  )}
               </div>
             </div>
           ))}
