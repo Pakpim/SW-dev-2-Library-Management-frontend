@@ -47,14 +47,14 @@ export default function MyReservationsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* {reservations.map((reservation: ReservationInfo) => (
-              // <ReservationCard
-              //   key={reservation._id}
-              //   reservation={reservation}
-              //   onEdit={handleEdit}
-              //   onDelete={handleDelete}
-              // />
-            ))} */}
+            {reservations.map((reservation: ReservationInfo) => (
+              <ReservationCard
+                key={reservation._id}
+                reservation={reservation}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
           </div>
         )}
       </div>

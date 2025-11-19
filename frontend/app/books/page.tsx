@@ -50,9 +50,7 @@ export default function BooksPage() {
   useEffect(() => {
     fetchReservations();
     setReservationCount(reservations.length);
-    console.log("HI");
-
-    console.log("reservation", reservations);
+    setIsLoading(false);
   }, []);
 
   // Fetch user from localStorage
