@@ -41,19 +41,28 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Body parsing middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Cookie parser
 app.use(cookieParser());
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
-  credentials: true
-}));
+// app.use(cors({
+//   origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
+//   credentials: true
+// }));
+
+app.use(
+  cors({
+    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    allowedHeaders: "Content-Type,Authorization",
+    credentials: true
+  })
+);
 
 // API routes
 app.use("/api/v1/auth", auth);

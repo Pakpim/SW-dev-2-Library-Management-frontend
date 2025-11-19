@@ -54,7 +54,7 @@ export default function AdminBooksManagePage() {
               />
             </div>
           </div>
-          <BookCreateDialog createBook={createBook} />
+          <BookCreateDialog createBook={createBook} books={books} />
         </div>
       </div>
 
@@ -119,7 +119,16 @@ export default function AdminBooksManagePage() {
 
               {/* edit */}
               <div className="p-4 border-t border-gray-200 flex space-x-2">
-                <BookEditDialog book={book} updateBook={updateBook} />
+                <BookEditDialog
+                  books={books}
+                  book={book}
+                  updateBook={updateBook}
+                />
+                {/* <BookEditDialog
+                  book={book}
+                  books={books}
+                  updateBook={updateBook}
+                /> */}
                 <button
                   className="flex-1 px-4 py-2 text-white rounded-md bg-red-600 hover:bg-red-700"
                   onClick={() => {
