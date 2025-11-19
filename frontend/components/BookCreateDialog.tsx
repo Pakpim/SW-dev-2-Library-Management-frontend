@@ -27,7 +27,7 @@ export default function BookCreateDialog({
   const [isbn, setIsbn] = useState<string>("");
   const [publisher, setPublisher] = useState<string>("");
   const [availableAmount, setAvailableAmount] = useState<number>(1);
-  const [coverPicture, setCoverPicture] = useState<File | undefined>();
+  const [coverPicture, setCoverPicture] = useState<string>("");
   const [validTitle, setValidTitle] = useState<boolean>(true);
   const [validIsbn, setValidIsbn] = useState<boolean>(true);
 
@@ -40,30 +40,16 @@ export default function BookCreateDialog({
     });
   }
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const image = e.target.files[0];
-      new Compressor(image, {
-        quality: 0.2,
-        success: (compressedResult: File) => {
-          // compressedResult has the compressed file.
-          // Use the compressed file to upload the images to your server.
-          setCoverPicture(compressedResult);
-        },
-      });
-    }
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const base64Image = await convertToBase64(coverPicture!);
+
     createBook({
       title: title,
       author: author,
       ISBN: isbn,
       publisher: publisher,
       availableAmount: availableAmount,
-      coverPicture: base64Image,
+      coverPicture: coverPicture,
     });
     resetForm();
     setOpen(false);
@@ -75,7 +61,7 @@ export default function BookCreateDialog({
     setIsbn("");
     setPublisher("");
     setAvailableAmount(0);
-    setCoverPicture(undefined);
+    setCoverPicture("");
     setValidTitle(true);
     setValidIsbn(true);
   };
@@ -107,18 +93,17 @@ export default function BookCreateDialog({
               >
                 Cover Picture
               </label>
+
               <input
                 required
-                placeholder="choose file"
-                type="file"
-                accept="image/*"
                 id="coverPicture"
-                onChange={handleUpload}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={coverPicture}
+                onChange={(e) => setCoverPicture(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {coverPicture && (
                 <img
-                  src={URL.createObjectURL(coverPicture)}
+                  src={coverPicture}
                   alt="Cover Preview"
                   className="mt-2 h-32 object-contain"
                 />
