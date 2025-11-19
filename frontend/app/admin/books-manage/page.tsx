@@ -74,8 +74,9 @@ export default function AdminBooksManagePage() {
           {filteredBooks.map((book) => (
             <div
               key={book._id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-              {/* Book Cover */}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+            >
+              {/* Book Cover  TODO IMGS*/}
               <div className="relative h-48 bg-gray-200 overflow-hidden">
                 <img
                   src={book.coverPicture}
@@ -111,7 +112,8 @@ export default function AdminBooksManagePage() {
                       book.availableAmount > 0
                         ? "text-green-600"
                         : "text-red-600"
-                    }>
+                    }
+                  >
                     {book.availableAmount}
                   </span>
                 </p>
@@ -139,7 +141,8 @@ export default function AdminBooksManagePage() {
                     ) {
                       deleteBook(book._id);
                     }
-                  }}>
+                  }}
+                >
                   Delete
                 </button>
               </div>

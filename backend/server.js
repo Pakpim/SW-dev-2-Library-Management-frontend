@@ -35,16 +35,16 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   message: {
     success: false,
-    error: "Too many requests from this IP, please try again later."
-  }
+    error: "Too many requests from this IP, please try again later.",
+  },
 });
 app.use(limiter);
 
 // Body parsing middleware
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Cookie parser
 app.use(cookieParser());
@@ -57,10 +57,10 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: "GET,POST,PUT,DELETE,PATCH",
     allowedHeaders: "Content-Type,Authorization",
-    credentials: true
+    credentials: true,
   })
 );
 
@@ -72,87 +72,95 @@ app.use("/api/v1/reservations", requests);
 // Swagger configuration
 const swaggerOptions = {
   swaggerDefinition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'LibManager Library Management API',
-      version: '1.0.0',
-      description: 'A RESTful API for library management with user authentication and role-based authorization. Supports both admin and member user roles with different access levels.',
+      title: "LibManager Library Management API",
+      version: "1.0.0",
+      description:
+        "A RESTful API for library management with user authentication and role-based authorization. Supports both admin and member user roles with different access levels.",
       contact: {
-        name: 'LibManager API Support',
-        email: 'support@stockme.com'
+        name: "LibManager API Support",
+        email: "support@stockme.com",
       },
       license: {
-        name: 'ISC',
-        url: 'https://opensource.org/licenses/ISC'
-      }
+        name: "ISC",
+        url: "https://opensource.org/licenses/ISC",
+      },
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 5000}/api/v1`,
-        description: 'Development server'
-      }
+        url: `${
+          process.env.BACKEND_URL ||
+          "http://localhost:" + (process.env.PORT || 5000)
+        }/api/v1`,
+        description: "Development server",
+      },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
-        }
-      }
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
     },
     security: [
       {
-        bearerAuth: []
-      }
-    ]
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: ['./routes/*.js'],
+  apis: ["./routes/*.js"],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'LibManager API Documentation'
-}));
+app.use(
+  "/api-docs",
+  swaggerUI.serve,
+  swaggerUI.setup(swaggerDocs, {
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "LibManager API Documentation",
+  })
+);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'LibManager API is running',
+    message: "LibManager API is running",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
 // Root endpoint
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Welcome to LibManager Library Management API',
-    version: '1.0.0',
-    documentation: '/api-docs',
-    health: '/health'
+    message: "Welcome to LibManager Library Management API",
+    version: "1.0.0",
+    documentation: "/api-docs",
+    health: "/health",
   });
 });
 
 // 404 handler for undefined routes
-app.use('*', (req, res) => {
+app.use("*", (req, res) => {
   res.status(404).json({
     success: false,
-    error: `Route ${req.originalUrl} not found`
+    error: `Route ${req.originalUrl} not found`,
   });
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  
+
   res.status(err.statusCode || 500).json({
     success: false,
-    error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    error: err.message || "Internal Server Error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
 
@@ -161,7 +169,9 @@ const PORT = process.env.PORT || 5000;
 const server = app.listen(
   PORT,
   console.log(
-    `LibManager API Server running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}`
+    `LibManager API Server running in ${
+      process.env.NODE_ENV || "development"
+    } mode on http://localhost:${PORT}`
   )
 );
 

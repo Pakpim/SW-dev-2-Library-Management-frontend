@@ -85,7 +85,8 @@ export default function BookCreateDialog({
       open={open}
       onOpenChange={() => {
         setOpen(!open), resetForm();
-      }}>
+      }}
+    >
       <DialogTrigger className="px-4 py-2 text-white rounded-md bg-blue-600 hover:bg-blue-700">
         New Book
       </DialogTrigger>
@@ -93,7 +94,7 @@ export default function BookCreateDialog({
         <DialogHeader>
           <DialogTitle>New Book</DialogTitle>
           <DialogDescription>
-            Fill in the details of the new book here. Click save when you're
+            Fill in the details of the new book here. Click save when you are
             done.
           </DialogDescription>
         </DialogHeader>
@@ -102,7 +103,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="coverPicture"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Cover Picture
               </label>
               <input
@@ -125,7 +127,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="title"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Book title
               </label>
               <input
@@ -151,7 +154,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="author"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Author
               </label>
               <input
@@ -165,7 +169,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="isbn"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 ISBN
               </label>
               <input
@@ -191,7 +196,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="publisher"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Publisher
               </label>
               <input
@@ -207,7 +213,8 @@ export default function BookCreateDialog({
             <div className="grid gap-2">
               <label
                 htmlFor="availableAmount"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Available Amount
               </label>
               <input
@@ -226,13 +233,15 @@ export default function BookCreateDialog({
           <DialogFooter>
             <DialogClose
               className="px-4 py-2 text-white bg-yellow-400 rounded-md hover:bg-yellow-500"
-              onClick={resetForm}>
+              onClick={resetForm}
+            >
               Cancel
             </DialogClose>
             <button
               type="submit"
               className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-              disabled={!validTitle || !validIsbn}>
+              disabled={!validTitle || !validIsbn}
+            >
               ok
             </button>
           </DialogFooter>

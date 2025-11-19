@@ -12,7 +12,8 @@ export interface AuthResponse {
   token: string;
 }
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 export const authAPI = {
   async login(email: string, password: string): Promise<AuthResponse> {
