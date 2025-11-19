@@ -235,6 +235,7 @@ export default function BooksPage() {
                 {/* Reserve Button (for members only) */}
                 {user &&
                   user.role === "member" &&
+                  book.availableAmount != 0 &&
                   !hasActiveReservationForBook(book._id) && (
                     <button
                       onClick={() => handleReserveBook(book._id)}
