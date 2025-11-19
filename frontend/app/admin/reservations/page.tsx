@@ -20,7 +20,7 @@ export default function AdminReservationsManagePage() {
 
   useEffect(() => {
     fetchReservations();
-  }, [fetchReservations]);
+  }, []);
 
   const handleEdit = async (
     id: string,

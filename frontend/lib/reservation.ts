@@ -14,10 +14,17 @@ export interface Reservation {
   _id: string;
 }
 
+export interface UserInfo {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export interface ReservationInfo {
   _id: string;
   book: Book;
-  user: string;
+  user: UserInfo;
   borrowDate: string;
   pickupDate: string;
   status: "pending" | "approved" | "rejected";
@@ -120,14 +127,22 @@ const reservationAPI = {
   },
 
   async delete(id: string): Promise<void> {
+    const session = await authAPI.getSession();
+    const token = session.token;
+
+    if (!token) throw new Error("Authentication token not found");
     const res = await fetch(`${BACKEND_URL}/api/v1/reservations/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       credentials: "include",
     });
 
     if (!res.ok) {
-      console.error("Delete reservation failed:", await res.text());
-      throw new Error("Failed to delete reservation");
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to delete reservation");
     }
   },
 };

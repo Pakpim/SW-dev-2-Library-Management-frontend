@@ -80,8 +80,8 @@ export default function ReservationCard({
           <div className="space-y-2 mb-4 text-sm text-gray-600">
             {isAdmin && (
               <p>
-                <span className="font-medium text-gray-700">User ID:</span>{" "}
-                {reservation.user}
+                <span className="font-medium text-gray-700">User:</span>{" "}
+                {reservation.user.name} ({reservation.user.email})
               </p>
             )}
             <p>
